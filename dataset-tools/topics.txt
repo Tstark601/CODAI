@@ -1,0 +1,30 @@
+Explicación paso a paso de Clean Architecture en Python.
+Por qué usar Angular 19 Standalone Components vs NgModules.
+Cómo configurar Docker y Docker Compose para un proyecto fullstack (FastAPI + Postgres).
+Cómo manejar el estado en Angular sin NgRx (usando Signals y Services).
+Qué es RAG (Retrieval-Augmented Generation) y cómo implementarlo con pgvector.
+Cómo optimizar consultas SQL lentas en PostgreSQL.
+Diferencia entre Promesas y Async/Await en JavaScript/TypeScript, con ejemplos.
+Explicación de CORS y cómo solucionarlo entre Angular y FastAPI.
+Buenas prácticas de seguridad usando JWT y bcrypt.
+Cómo diseñar una API RESTful estructurada.
+Refactorización de código espagueti a Patrón Repositorio en FastAPI.
+Cómo estructurar un proyecto escalable en FastAPI.
+Diferencias conceptuales entre SQL y NoSQL, cuándo usar cuál.
+Cómo implementar WebSockets en Node.js o Python.
+Estrategias de despliegue en la nube (Vercel, Render, Railway).
+Depuración de fugas de memoria en aplicaciones Node/Angular.
+Mejores prácticas para nombrar variables, funciones y clases (Clean Code).
+Explicación de los principios SOLID aplicados con código TypeScript.
+Preguntas comunes técnicas en entrevistas de desarrollo React/Angular.
+Guía paso a paso para configurar CI/CD con GitHub Actions.
+Implementar autenticación de Google/OAuth2 en el backend.
+Cómo proteger endpoints y validar inputs de usuarios con Pydantic.
+Crear una estructura base MVP para un proyecto de SaaS.
+Cómo leer y escribir archivos en el sistema local con Python de forma segura.
+Configuración óptima del archivo tsconfig.json para un inicio de proyecto.
+Manejo de errores globales y custom exceptions en APIs backend.
+Qué son los Microservicios vs Monolitos y recomendaciones de arquitectura.
+El uso correcto de los interceptors HTTP en Angular.
+Patrón Inyección de Dependencias: qué es y ejemplos prácticos.
+Cómo integrar la API de Groq en un proyecto web.
