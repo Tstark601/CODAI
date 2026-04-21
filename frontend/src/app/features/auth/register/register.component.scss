@@ -1,0 +1,17 @@
+// Same base styles as login - extends the shared auth design
+@use '../login/login.component.scss' as *;
+
+.auth-card { max-width: 480px; }
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+}
+
+.label-hint {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  font-weight: 400;
+  margin-left: var(--space-2);
+}

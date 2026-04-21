@@ -1,0 +1,163 @@
+<div class="auth-page">
+  <div class="auth-bg">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="grid-lines"></div>
+  </div>
+
+  <div class="auth-card fade-in">
+    <div class="auth-header">
+      <div class="brand">
+        <div class="brand-icon">
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+            <path d="M4 20L12 8L16 14L20 10L24 20H4Z" fill="url(#grad3)" opacity="0.9"/>
+            <defs>
+              <linearGradient id="grad3" x1="4" y1="8" x2="24" y2="20">
+                <stop offset="0%" stop-color="#7C6AF7"/>
+                <stop offset="100%" stop-color="#00D4AA"/>
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+        <span class="brand-name">CODAI</span>
+      </div>
+      <h1 class="auth-title">Crea tu cuenta</h1>
+      <p class="auth-subtitle">Únete y empieza a construir con David, tu asistente IA</p>
+    </div>
+
+    @if (error()) {
+      <div class="alert-error fade-in">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12" y2="16"/>
+        </svg>
+        {{ error() }}
+      </div>
+    }
+
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="auth-form">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="reg-full-name">Nombre completo</label>
+          <input
+            id="reg-full-name"
+            type="text"
+            class="form-control"
+            formControlName="full_name"
+            placeholder="Juan Pérez"
+            autocomplete="name"
+          />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="reg-username">
+            Usuario
+            <span class="label-hint">Solo letras, números, _ -</span>
+          </label>
+          <input
+            id="reg-username"
+            type="text"
+            class="form-control"
+            [class.is-error]="form.get('username')?.invalid && form.get('username')?.touched"
+            formControlName="username"
+            placeholder="juandev"
+            autocomplete="username"
+          />
+          @if (form.get('username')?.hasError('pattern') && form.get('username')?.touched) {
+            <span class="form-error">Solo letras, números, guión y guión bajo</span>
+          }
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="reg-email">Correo electrónico</label>
+        <input
+          id="reg-email"
+          type="email"
+          class="form-control"
+          [class.is-error]="form.get('email')?.invalid && form.get('email')?.touched"
+          formControlName="email"
+          placeholder="tu@email.com"
+          autocomplete="email"
+        />
+        @if (form.get('email')?.invalid && form.get('email')?.touched) {
+          <span class="form-error">Email inválido</span>
+        }
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="reg-password">Contraseña</label>
+        <div class="input-password-wrapper">
+          <input
+            id="reg-password"
+            [type]="showPassword() ? 'text' : 'password'"
+            class="form-control"
+            [class.is-error]="form.get('password')?.invalid && form.get('password')?.touched"
+            formControlName="password"
+            placeholder="Mínimo 8 caracteres"
+            autocomplete="new-password"
+          />
+          <button type="button" class="btn-icon toggle-pass" (click)="togglePassword()" id="toggle-reg-password">
+            @if (showPassword()) {
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+                <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+                <line x1="1" y1="1" x2="23" y2="23"/>
+              </svg>
+            } @else {
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+            }
+          </button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="reg-confirm-password">Confirmar contraseña</label>
+        <input
+          id="reg-confirm-password"
+          [type]="showPassword() ? 'text' : 'password'"
+          class="form-control"
+          [class.is-error]="form.get('confirmPassword')?.hasError('mismatch') && form.get('confirmPassword')?.touched"
+          formControlName="confirmPassword"
+          placeholder="Repite tu contraseña"
+          autocomplete="new-password"
+        />
+        @if (form.get('confirmPassword')?.hasError('mismatch') && form.get('confirmPassword')?.touched) {
+          <span class="form-error">Las contraseñas no coinciden</span>
+        }
+      </div>
+
+      <button
+        id="register-submit-btn"
+        type="submit"
+        class="btn btn-primary w-full submit-btn"
+        [disabled]="form.invalid || loading()"
+      >
+        @if (loading()) {
+          <div class="spinner"></div>
+          <span>Creando cuenta...</span>
+        } @else {
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <line x1="19" y1="8" x2="19" y2="14"/>
+            <line x1="22" y1="11" x2="16" y2="11"/>
+          </svg>
+          <span>Crear Cuenta</span>
+        }
+      </button>
+    </form>
+
+    <div class="auth-footer">
+      ¿Ya tienes cuenta?
+      <a routerLink="/auth/login" id="go-login-link">Iniciar sesión</a>
+    </div>
+
+    <div class="david-tag">
+      <div class="david-dot"></div>
+      <span>David AI · Online</span>
+    </div>
+  </div>
+</div>

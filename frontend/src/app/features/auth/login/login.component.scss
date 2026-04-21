@@ -1,0 +1,198 @@
+.auth-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-6);
+  position: relative;
+  overflow: hidden;
+}
+
+/* ─── Animated Background ─────────────────────────────── */
+.auth-bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(100px);
+  opacity: 0.12;
+  animation: float 8s ease-in-out infinite;
+}
+
+.orb-1 {
+  width: 600px;
+  height: 600px;
+  background: var(--color-primary);
+  top: -150px;
+  left: -150px;
+}
+
+.orb-2 {
+  width: 500px;
+  height: 500px;
+  background: var(--color-accent);
+  bottom: -150px;
+  right: -150px;
+  animation-delay: -4s;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50%       { transform: translateY(-30px) scale(1.05); }
+}
+
+.grid-lines {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(124, 106, 247, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(124, 106, 247, 0.04) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+/* ─── Card ───────────────────────────────────────────── */
+.auth-card {
+  width: 100%;
+  max-width: 420px;
+  background: rgba(19, 20, 27, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--bg-border);
+  border-radius: var(--radius-xl);
+  padding: var(--space-8);
+  box-shadow: var(--shadow-lg), 0 0 60px rgba(124, 106, 247, 0.08);
+  position: relative;
+  z-index: 1;
+}
+
+/* ─── Header ─────────────────────────────────────────── */
+.auth-header {
+  text-align: center;
+  margin-bottom: var(--space-8);
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-6);
+}
+
+.brand-icon {
+  width: 44px;
+  height: 44px;
+  background: linear-gradient(135deg, rgba(124, 106, 247, 0.2), rgba(0, 212, 170, 0.1));
+  border: 1px solid rgba(124, 106, 247, 0.3);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.brand-name {
+  font-size: 1.5rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--color-primary-light), var(--color-accent));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -0.02em;
+}
+
+.auth-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: var(--space-2);
+}
+
+.auth-subtitle {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+/* ─── Alert ──────────────────────────────────────────── */
+.alert-error {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  background: rgba(247, 100, 124, 0.1);
+  border: 1px solid rgba(247, 100, 124, 0.3);
+  border-radius: var(--radius-md);
+  color: var(--color-danger);
+  font-size: 0.875rem;
+  margin-bottom: var(--space-6);
+}
+
+/* ─── Form ───────────────────────────────────────────── */
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.input-password-wrapper {
+  position: relative;
+
+  .form-control { padding-right: 44px; }
+
+  .toggle-pass {
+    position: absolute;
+    right: var(--space-2);
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    &:hover { color: var(--text-primary); }
+  }
+}
+
+.submit-btn {
+  height: 48px;
+  font-size: 0.9375rem;
+  margin-top: var(--space-2);
+}
+
+/* ─── Footer ─────────────────────────────────────────── */
+.auth-footer {
+  text-align: center;
+  margin-top: var(--space-6);
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+
+  a {
+    color: var(--color-primary-light);
+    font-weight: 500;
+    margin-left: var(--space-1);
+    &:hover { color: var(--color-primary); }
+  }
+}
+
+/* ─── David Tag ──────────────────────────────────────── */
+.david-tag {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  margin-top: var(--space-6);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.david-dot {
+  width: 6px;
+  height: 6px;
+  background: var(--color-accent);
+  border-radius: 50%;
+  box-shadow: 0 0 8px var(--color-accent);
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.6; transform: scale(1.4); }
+}
