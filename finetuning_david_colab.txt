@@ -1,0 +1,180 @@
+========================================================
+  PIPELINE DE FINE-TUNING DE DAVID (CODAI) — GOOGLE COLAB
+  Versión corregida y validada
+========================================================
+
+INSTRUCCIONES PREVIAS:
+  1. Sube tu archivo dataset.jsonl a tu entorno de Google Colab.
+  2. Asegúrate de activar el Runtime con GPU (ej. T4):
+     Menú -> Runtime -> Change runtime type -> T4 GPU
+  3. Copia cada bloque en una celda individual de un cuaderno nuevo.
+
+--------------------------------------------------------
+CELDA 1: Instalación de librerías
+--------------------------------------------------------
+
+%%capture
+!pip install "unsloth[colab-new] @ git+https://github.com/unslothai/unsloth.git"
+!pip install --no-deps "xformers<0.0.27" "trl<0.9.0" peft accelerate bitsandbytes
+
+--------------------------------------------------------
+CELDA 2: Cargar el Modelo Base
+--------------------------------------------------------
+
+from unsloth import FastLanguageModel
+import torch
+
+max_seq_length = 1024   # Reducido a 1024 para evitar OutOfMemory en la T4 gratuita
+dtype = None             # Se autodetecta (Float16 usualmente)
+load_in_4bit = True      # Obligatorio para GPUs gratis (reduce VRAM)
+
+model_name = "unsloth/llama-3-8b-Instruct-bnb-4bit"
+
+model, tokenizer = FastLanguageModel.from_pretrained(
+    model_name = model_name,
+    max_seq_length = max_seq_length,
+    dtype = dtype,
+    load_in_4bit = load_in_4bit,
+)
+
+# Adaptadores LoRA: solo se entrena 1-5% de los parámetros
+model = FastLanguageModel.get_peft_model(
+    model,
+    r = 16,
+    target_modules = ["q_proj", "k_proj", "v_proj", "o_proj",
+                      "gate_proj", "up_proj", "down_proj"],
+    lora_alpha = 16,
+    lora_dropout = 0,
+    bias = "none",
+    use_gradient_checkpointing = "unsloth",
+    random_state = 42,
+    use_rslora = False,
+)
+
+# --------------------------------------------------------
+# CELDA 3: Cargar y Formatear el Dataset (ChatML)
+# --------------------------------------------------------
+# [FIX] Se eliminó el parámetro 'mapping' de get_chat_template porque
+# fue removido en versiones recientes de Unsloth y causaba crash.
+
+from datasets import load_dataset
+from unsloth.chat_templates import get_chat_template
+
+# ✅ Versión corregida (sin el parámetro mapping obsoleto)
+tokenizer = get_chat_template(
+    tokenizer,
+    chat_template = "llama-3",
+)
+
+def formatting_prompts_func(examples):
+    conversations = examples["messages"]
+    texts = [tokenizer.apply_chat_template(
+        convo, tokenize=False, add_generation_prompt=False
+    ) for convo in conversations]
+    return { "text" : texts }
+
+print("Cargando dataset local...")
+dataset = load_dataset("json", data_files="dataset.jsonl", split="train")
+dataset = dataset.map(formatting_prompts_func, batched=True)
+print(f"✅ Dataset de {len(dataset)} conversaciones cargado y formateado!")
+
+# --------------------------------------------------------
+# CELDA 4: Iniciar el Entrenamiento (Training Loop)
+# --------------------------------------------------------
+
+from trl import SFTTrainer
+from transformers import TrainingArguments
+
+trainer = SFTTrainer(
+    model = model,
+    tokenizer = tokenizer,
+    train_dataset = dataset,
+    dataset_text_field = "text",
+    max_seq_length = max_seq_length,
+    dataset_num_proc = 2,
+    packing = False,
+    args = TrainingArguments(
+        per_device_train_batch_size = 1,      # Reducido para salvar RAM de GPU
+        gradient_accumulation_steps = 8,       # Subido para compensar
+        warmup_steps = 10,
+        max_steps = 150,                       # Aumenta si el Loss sigue bajando
+        # num_train_epochs = 3,               # Alternativa: pasar 3 veces por el dataset
+        learning_rate = 2e-4,
+        fp16 = not torch.cuda.is_bf16_supported(),
+        bf16 = torch.cuda.is_bf16_supported(),
+        logging_steps = 5,
+        optim = "adamw_8bit",
+        weight_decay = 0.01,
+        lr_scheduler_type = "linear",
+        seed = 42,
+        output_dir = "outputs",
+    ),
+)
+
+trainer_stats = trainer.train()
+
+# --------------------------------------------------------
+# CELDA 5: Conectar Google Drive y Exportar Modelo
+# --------------------------------------------------------
+# [FIX 1] Adaptador LoRA guardado en Drive antes del GGUF (respaldo).
+# [FIX 2] os.path.basename() en lugar de split("/").
+# [FIX 3] Glob recursivo: Unsloth guarda en una subcarpeta con doble sufijo
+#         ej: david_model_gguf_gguf/ en lugar de david_model_gguf/
+
+from google.colab import drive
+import os, shutil, glob
+
+# 1. Conectar Google Drive
+drive.mount('/content/drive')
+
+local_lora_path = "lora_adapter"
+local_export_path = "david_model_gguf"
+drive_path = "/content/drive/MyDrive/CODAI_Models"
+os.makedirs(drive_path, exist_ok=True)
+
+# 2. PRIMERO: guardar adaptador LoRA como respaldo (rápido, ~150MB)
+print("Paso 1: Guardando adaptador LoRA en Drive (respaldo de seguridad)...")
+model.save_pretrained(local_lora_path)
+tokenizer.save_pretrained(local_lora_path)
+shutil.copytree(local_lora_path, f"{drive_path}/lora_adapter", dirs_exist_ok=True)
+print("✅ Adaptador LoRA guardado en Drive.")
+
+# 3. Exportar a GGUF localmente
+print("Paso 2: Exportando a GGUF localmente (puede tardar 5-15 min)...")
+model.save_pretrained_gguf(local_export_path, tokenizer, quantization_method="q4_k_m")
+
+# 4. Buscar el GGUF en TODAS las subcarpetas (Unsloth puede agregar sufijo _gguf)
+print("Paso 3: Buscando y copiando GGUF a Google Drive...")
+# ✅ FIX: búsqueda recursiva para cubrir rutas como david_model_gguf_gguf/
+archivos_gguf = glob.glob("/content/**/*.gguf", recursive=True)
+
+if archivos_gguf:
+    # Tomar el más reciente si hay varios
+    archivo_origen = sorted(archivos_gguf, key=os.path.getmtime)[-1]
+    nombre_archivo = os.path.basename(archivo_origen)
+    shutil.copy(archivo_origen, f"{drive_path}/{nombre_archivo}")
+    print(f"✅ ¡Éxito total! '{nombre_archivo}' está guardado en Google Drive.")
+    print(f"   Ruta original: {archivo_origen}")
+else:
+    print("❌ No se encontró el archivo .gguf.")
+    print("   ℹ️ Tu adaptador LoRA ya está en Drive como respaldo en: lora_adapter/")
+
+========================================================
+  RESUMEN DE FIXES APLICADOS
+========================================================
+
+  CELDA 3:
+    - Eliminado parámetro 'mapping' en get_chat_template (obsoleto en Unsloth reciente)
+
+  CELDA 5:
+    - [CRÍTICO] Se guarda el adaptador LoRA en Drive ANTES de la conversión GGUF
+      → Evita perder el entrenamiento si Colab se desconecta durante la exportación
+    - os.path.basename() reemplaza split("/") para nombres de archivo robustos
+
+  RUTA FINAL EN GOOGLE DRIVE:
+    MyDrive/
+    └── CODAI_Models/
+        ├── lora_adapter/       ← Respaldo del adaptador LoRA
+        └── david-*.gguf        ← Modelo final para usar con Ollama/LM Studio
+
+========================================================
